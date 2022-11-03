@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 type Status struct {
@@ -57,8 +58,8 @@ func main() {
 
 	statusServeMux := http.NewServeMux()
 	statusServeMux.HandleFunc("/", statusHandler)
-	http.ListenAndServe("localhost:8080", statusServeMux)
 	fmt.Println("Started status server")
+	http.ListenAndServe("localhost:8080", statusServeMux)
 }
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,11 +74,13 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func setupHandlerFor(selectedRange *RangeDetails) *http.ServeMux {
+func setupHandlerFor(selectedRange *RangeDetails) http.Handler {
 	resultServeMux := http.NewServeMux()
 	resultServeMux.HandleFunc("/", getRangeAdvertHandler(selectedRange))
 
-	return resultServeMux
+	wrappedHandler := logRequestHandlerWrapper(resultServeMux)
+
+	return wrappedHandler
 }
 
 func getRangeAdvertHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
@@ -88,4 +91,17 @@ func getRangeAdvertHandler(selectedRange *RangeDetails) func(w http.ResponseWrit
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}
+}
+
+func logRequestHandlerWrapper(h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r)
+		fmt.Println(generateLogLine(r.URL.String(), r.Method, r.Proto, r.RemoteAddr))
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func generateLogLine(uri, method, protocol, remote string) string {
+	return fmt.Sprintf("[%s] \"%s %s %s\" %s", time.Now().UTC(), method, uri, protocol, remote)
 }
