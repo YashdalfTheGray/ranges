@@ -51,7 +51,7 @@ func main() {
 		i := i
 		r := r
 		go func(port int, selectedRange *RangeDetails) {
-			http.ListenAndServe(fmt.Sprintf("localhost:808%d", port), setupHandlerFor(selectedRange))
+			http.ListenAndServe(fmt.Sprintf("0.0.0.0:808%d", port), setupHandlerFor(selectedRange))
 		}(i+1, &r)
 	}
 	fmt.Println("Started advert servers")
@@ -59,7 +59,7 @@ func main() {
 	statusServeMux := http.NewServeMux()
 	statusServeMux.HandleFunc("/", statusHandler)
 	fmt.Println("Started status server")
-	http.ListenAndServe("localhost:8080", statusServeMux)
+	http.ListenAndServe("0.0.0.0:8080", statusServeMux)
 }
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
