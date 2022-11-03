@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"time"
@@ -47,19 +48,25 @@ var allRanges = []RangeDetails{
 }
 
 func main() {
+	var bindAddr string
+
+	flag.StringVar(&bindAddr, "bind-address", "localhost", "the address to bind the ports to")
+	flag.Parse()
+
 	for i, r := range allRanges {
 		i := i
 		r := r
 		go func(port int, selectedRange *RangeDetails) {
-			http.ListenAndServe(fmt.Sprintf("0.0.0.0:808%d", port), setupHandlerFor(selectedRange))
+			http.ListenAndServe(fmt.Sprintf("%s:808%d", bindAddr, port), setupHandlerFor(selectedRange))
 		}(i+1, &r)
 	}
 	fmt.Println("Started advert servers")
 
 	statusServeMux := http.NewServeMux()
 	statusServeMux.HandleFunc("/", statusHandler)
+	wrappedStatusHandler := logRequestHandlerWrapper(statusServeMux)
 	fmt.Println("Started status server")
-	http.ListenAndServe("0.0.0.0:8080", statusServeMux)
+	http.ListenAndServe(fmt.Sprintf("%s:8080", bindAddr), wrappedStatusHandler)
 }
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
