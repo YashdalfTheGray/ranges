@@ -47,14 +47,18 @@ var allRanges = []RangeDetails{
 
 func main() {
 	for i, r := range allRanges {
+		i := i
+		r := r
 		go func(port int, selectedRange *RangeDetails) {
 			http.ListenAndServe(fmt.Sprintf("localhost:808%d", port), setupHandlerFor(selectedRange))
-		}(i, &r)
+		}(i+1, &r)
 	}
+	fmt.Println("Started advert servers")
 
 	statusServeMux := http.NewServeMux()
 	statusServeMux.HandleFunc("/", statusHandler)
 	http.ListenAndServe("localhost:8080", statusServeMux)
+	fmt.Println("Started status server")
 }
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +68,6 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewEncoder(w).Encode(status); err == nil {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -81,7 +84,6 @@ func getRangeAdvertHandler(selectedRange *RangeDetails) func(w http.ResponseWrit
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(&selectedRange); err == nil {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-			w.WriteHeader(http.StatusOK)
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
