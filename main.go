@@ -112,3 +112,59 @@ func logRequestHandlerWrapper(h http.Handler) http.Handler {
 func generateLogLine(uri, method, protocol, remote string) string {
 	return fmt.Sprintf("[%s] \"%s %s %s\" %s", time.Now().UTC(), method, uri, protocol, remote)
 }
+
+func getHtmlForRange(selectedRange *RangeDetails) (string, error) {
+	htmlToReturn := `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+	<style>
+		html {
+			height: 100%;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+			background-color: #90caf9;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		h1 {
+			text-align: center;
+		}
+		
+		a {
+			color: #000;
+		}
+	</style>
+</head>
+<body>
+  <h1>
+		<span>Click here to buy the</span>
+		<br />
+		<a href="{{.Link}}" target="_blank">{{.Make}} {{.Model}}!</a>
+	</h1>
+</body>
+</html>
+`
+
+	tmpl, parseErr := template.New("range").Parse(htmlToReturn)
+	if parseErr != nil {
+		return "", parseErr
+	}
+	buf := bytes.NewBuffer(make([]byte, 0))
+
+	execErr := tmpl.Execute(buf, selectedRange)
+	if execErr != nil {
+		return "", execErr
+	}
+
+	return buf.String(), nil
+}
