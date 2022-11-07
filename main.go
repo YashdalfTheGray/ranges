@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
+	"text/template"
 	"time"
 )
 
@@ -83,19 +86,35 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 
 func setupHandlerFor(selectedRange *RangeDetails) http.Handler {
 	resultServeMux := http.NewServeMux()
-	resultServeMux.HandleFunc("/", getRangeAdvertHandler(selectedRange))
+	resultServeMux.HandleFunc("/json", getRangeAdvertJsonHandler(selectedRange))
+	resultServeMux.HandleFunc("/", getRangeAdvertUiHandler(selectedRange))
 
 	wrappedHandler := logRequestHandlerWrapper(resultServeMux)
 
 	return wrappedHandler
 }
 
-func getRangeAdvertHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
+func getRangeAdvertJsonHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(&selectedRange); err == nil {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
+}
+
+func getRangeAdvertUiHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		responseString, htmlGenErr := getHtmlForRange(selectedRange)
+		if htmlGenErr != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		_, err := io.WriteString(w, responseString)
+
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 }
