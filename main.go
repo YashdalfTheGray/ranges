@@ -2,12 +2,12 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"text/template"
 	"time"
 )
@@ -22,6 +22,9 @@ type RangeDetails struct {
 	Model string `json:"model"`
 	Link  string `json:"link"`
 }
+
+//go:embed range.tpl.html
+var htmlTemplate string
 
 var allRanges = []RangeDetails{
 	{
@@ -134,13 +137,7 @@ func generateLogLine(uri, method, protocol, remote string) string {
 }
 
 func getHtmlForRange(selectedRange *RangeDetails) (string, error) {
-	fileBuf, readErr := os.ReadFile("range.tpl.html")
-	if readErr != nil {
-		return "", nil
-	}
-	htmlToReturn := string(fileBuf)
-
-	tmpl, parseErr := template.New("range").Parse(htmlToReturn)
+	tmpl, parseErr := template.New("range").Parse(htmlTemplate)
 	if parseErr != nil {
 		return "", parseErr
 	}
