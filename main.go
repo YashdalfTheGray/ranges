@@ -1,15 +1,10 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
-	"text/template"
-	"time"
 )
 
 type Status struct {
@@ -76,18 +71,6 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf("%s:8080", bindAddr), wrappedStatusHandler)
 }
 
-func statusHandler(w http.ResponseWriter, r *http.Request) {
-	status := Status{
-		Status:      "okay",
-		Advertizing: "absolutely",
-	}
-	if err := json.NewEncoder(w).Encode(status); err == nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	} else {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
 func setupHandlerFor(selectedRange *RangeDetails) http.Handler {
 	resultServeMux := http.NewServeMux()
 	resultServeMux.HandleFunc("/json", getRangeAdvertJsonHandler(selectedRange))
@@ -96,57 +79,4 @@ func setupHandlerFor(selectedRange *RangeDetails) http.Handler {
 	wrappedHandler := logRequestHandlerWrapper(resultServeMux)
 
 	return wrappedHandler
-}
-
-func getRangeAdvertJsonHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := json.NewEncoder(w).Encode(&selectedRange); err == nil {
-			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}
-}
-
-func getRangeAdvertUiHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		responseString, htmlGenErr := getHtmlForRange(selectedRange)
-		if htmlGenErr != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		_, err := io.WriteString(w, responseString)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-}
-
-func logRequestHandlerWrapper(h http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		h.ServeHTTP(w, r)
-		fmt.Println(generateLogLine(r.URL.String(), r.Method, r.Proto, r.RemoteAddr))
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func generateLogLine(uri, method, protocol, remote string) string {
-	return fmt.Sprintf("[%s] \"%s %s %s\" %s", time.Now().UTC(), method, uri, protocol, remote)
-}
-
-func getHtmlForRange(selectedRange *RangeDetails) (string, error) {
-	tmpl, parseErr := template.New("range").Parse(htmlTemplate)
-	if parseErr != nil {
-		return "", parseErr
-	}
-	buf := bytes.NewBuffer(make([]byte, 0))
-
-	execErr := tmpl.Execute(buf, selectedRange)
-	if execErr != nil {
-		return "", execErr
-	}
-
-	return buf.String(), nil
 }
