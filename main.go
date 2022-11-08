@@ -9,7 +9,7 @@ import (
 
 type Status struct {
 	Status      string `json:"status"`
-	Advertizing string `json:"advertizing"`
+	Advertising string `json:"advertizing"`
 }
 
 type RangeDetails struct {

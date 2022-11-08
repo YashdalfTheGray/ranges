@@ -10,7 +10,7 @@ import (
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	status := Status{
 		Status:      "okay",
-		Advertizing: "absolutely",
+		Advertising: "absolutely",
 	}
 	if err := json.NewEncoder(w).Encode(status); err == nil {
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
