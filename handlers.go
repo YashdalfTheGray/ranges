@@ -44,6 +44,18 @@ func getRangeAdvertUiHandler(selectedRange *RangeDetails) func(w http.ResponseWr
 	}
 }
 
+func getRangeAdvertImageHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		imageBytes, imageReadErr := assets.ReadFile(fmt.Sprintf("assets/%s.png", selectedRange.Model))
+		if imageReadErr != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.Write(imageBytes)
+		}
+	}
+}
+
 func logRequestHandlerWrapper(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		h.ServeHTTP(w, r)

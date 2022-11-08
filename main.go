@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "embed"
+	"embed"
 	"flag"
 	"fmt"
 	"net/http"
@@ -20,6 +20,9 @@ type RangeDetails struct {
 
 //go:embed range.tpl.html
 var htmlTemplate string
+
+//go:embed assets/*
+var assets embed.FS
 
 var allRanges = []RangeDetails{
 	{
@@ -73,6 +76,7 @@ func main() {
 
 func setupHandlerFor(selectedRange *RangeDetails) http.Handler {
 	resultServeMux := http.NewServeMux()
+	resultServeMux.HandleFunc("/image", getRangeAdvertImageHandler(selectedRange))
 	resultServeMux.HandleFunc("/json", getRangeAdvertJsonHandler(selectedRange))
 	resultServeMux.HandleFunc("/", getRangeAdvertUiHandler(selectedRange))
 
