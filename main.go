@@ -47,7 +47,7 @@ var allRanges = []RangeDetails{
 	},
 	{
 		Make:  "Samsung",
-		Model: "HR1124G",
+		Model: "NX60A6711SS",
 		Link:  "https://www.homedepot.com/p/315493149",
 	},
 }
