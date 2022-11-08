@@ -56,6 +56,13 @@ func getRangeAdvertImageHandler(selectedRange *RangeDetails) func(w http.Respons
 	}
 }
 
+func getRangeAdvertFaviconHandler(selectedRange *RangeDetails) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/x-icon")
+		w.Write(favicon)
+	}
+}
+
 func logRequestHandlerWrapper(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		h.ServeHTTP(w, r)

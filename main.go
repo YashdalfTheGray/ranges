@@ -21,6 +21,9 @@ type RangeDetails struct {
 //go:embed range.tpl.html
 var htmlTemplate string
 
+//go:embed favicon.ico
+var favicon []byte
+
 //go:embed assets/*
 var assets embed.FS
 
@@ -77,6 +80,7 @@ func main() {
 func setupHandlerFor(selectedRange *RangeDetails) http.Handler {
 	resultServeMux := http.NewServeMux()
 	resultServeMux.HandleFunc("/image", getRangeAdvertImageHandler(selectedRange))
+	resultServeMux.HandleFunc("/favicon.ico", getRangeAdvertFaviconHandler(selectedRange))
 	resultServeMux.HandleFunc("/json", getRangeAdvertJsonHandler(selectedRange))
 	resultServeMux.HandleFunc("/", getRangeAdvertUiHandler(selectedRange))
 
